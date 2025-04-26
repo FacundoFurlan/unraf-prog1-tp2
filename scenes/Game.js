@@ -78,7 +78,25 @@ export default class Game extends Phaser.Scene {
     this.bombs = this.physics.add.group();
 
     this.score = 0;
+    this.gameOverText = this.add.text(400,300, `GAME OVER`, {
+      fontSize: "64px",
+      fill: "000000"
+    }).setOrigin(0.5,0.5).setVisible(false);
     this.gameOver = false;
+    
+    this.totalTime = 30;
+
+    this.timerEvent = this.time.addEvent({
+      delay: 1000,
+      callback: this.updateTimer,
+      callbackScope: this,
+      loop: true
+    });
+
+    this.timerText = this.add.text(630,16, `Time: ${this.totalTime}`, {
+      fontSize: "32px",
+      fill: "#000000"
+    })
 
     this.scoreText = this.add.text(16, 16, `Score: ${this.score}`, {
       fontSize: "32px",
@@ -104,26 +122,52 @@ export default class Game extends Phaser.Scene {
       null,
       this
     );
+
+    this.input.keyboard.on('keydown-R', () => this.scene.restart(), this);
   }
 
   update() {
     // update game objects
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-160);
-
-      this.player.anims.play("left", true);
-    } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(160);
-
-      this.player.anims.play("right", true);
-    } else {
-      this.player.setVelocityX(0);
-
-      this.player.anims.play("turn");
+    if(!this.gameOver){
+      if (this.cursors.left.isDown) {
+        this.player.setVelocityX(-160);
+  
+        this.player.anims.play("left", true);
+      } else if (this.cursors.right.isDown) {
+        this.player.setVelocityX(160);
+  
+        this.player.anims.play("right", true);
+      } else {
+        this.player.setVelocityX(0);
+  
+        this.player.anims.play("turn");
+      }
+  
+      if (this.cursors.up.isDown && this.player.body.touching.down) {
+        this.player.setVelocityY(-330);
+      }
+    } else{
+      this.gameOverText.setVisible(true)
     }
+  }
 
-    if (this.cursors.up.isDown && this.player.body.touching.down) {
-      this.player.setVelocityY(-330);
+  updateTimer(){
+    if(!this.gameOver){
+      this.totalTime--;
+  
+      this.timerText.setText(`Time: ${this.totalTime}`)
+  
+      if(this.totalTime <= 0){
+        this.timerEvent.remove();
+  
+        this.physics.pause();
+  
+        this.player.setTint(0xff0000);
+    
+        this.player.anims.play("turn");
+
+        this.gameOver = true
+      }
     }
   }
 
